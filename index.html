@@ -1,63 +1,63 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#102923"><meta name="description" content="A beautiful calendar of remarkable dogs, real milestones and playful traditions."><title>Paws & History | The Dog Calendar</title>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#102923"><meta name="description" content="Krásný kalendář psích hrdinů, historických událostí a veselých tradic."><title>Psí kalendář | Příběhy a svátky</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
 :root{font-family:'DM Sans',sans-serif;color:#18342e;background:#f6f3eb}*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{cursor:pointer}header{background:#102923;color:#fff;padding:22px max(22px,calc((100vw - 1180px)/2))}nav{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.brand{font-family:'Playfair Display',serif;font-size:25px;font-weight:700}.brand span{color:#e6b66c}.navbtn,.ghost{border:1px solid #b4c6bc;background:transparent;color:inherit;border-radius:99px;padding:11px 18px}.hero{padding:90px 22px 95px;text-align:center;background:radial-gradient(circle at 75% 25%,#325648 0,transparent 36%),#102923;color:#fff}.eyebrow{text-transform:uppercase;letter-spacing:.2em;color:#e9bd79;font-size:12px;font-weight:700}.hero h1{font:600 clamp(46px,7vw,92px)/1.05 'Playfair Display',serif;max-width:900px;margin:20px auto}.hero p{color:#c6d5cc;font-size:18px;max-width:630px;margin:0 auto 30px;line-height:1.7}.primary{border:0;border-radius:99px;background:#e9bd79;color:#18342e;padding:14px 24px;font-weight:700}.shell{max-width:1180px;margin:-44px auto 80px;padding:0 22px}.panel{background:#fff;border:1px solid #e8e5dc;border-radius:22px;box-shadow:0 18px 45px #10292312;padding:25px}.toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:20px}.toolbar h2{font:600 32px 'Playfair Display',serif;margin:0}.filters{display:flex;gap:8px;flex-wrap:wrap}.filter{border:1px solid #d6ded7;background:#fff;color:#36594b;border-radius:99px;padding:9px 15px}.filter.active{background:#183d31;color:white}.search{border:1px solid #d6ded7;border-radius:12px;padding:13px 16px;width:100%;margin:18px 0 24px}.months{display:flex;gap:7px;overflow-x:auto;padding-bottom:12px}.month{border:0;border-radius:10px;background:#f3f4ef;padding:12px 15px;min-width:68px;color:#4e645a}.month.active{background:#e9bd79;color:#17362d;font-weight:700}.events{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:17px}.event{border:1px solid #e5e9e2;border-radius:17px;padding:22px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(145deg,#fff,#fbfcf8)}.tag{font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:#547969}.date{font:600 32px 'Playfair Display',serif;color:#183d31}.event h3{font:600 22px 'Playfair Display',serif;margin:0}.event p{line-height:1.65;color:#5d6d64;margin:0;flex:1}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.actions button,.actions a{border:1px solid #dce4dc;border-radius:9px;padding:9px 12px;background:#f4f7f2;color:#234739;text-decoration:none;font-size:12px;font-weight:700}.footer{text-align:center;color:#6a786d;font-size:13px;margin:50px auto;max-width:700px;padding:0 20px;line-height:1.7}.empty{padding:45px;text-align:center;color:#6a786d}.export{display:flex;gap:10px;flex-wrap:wrap}.export button{border:0;background:#183d31;color:white;border-radius:10px;padding:11px 15px;font-weight:700}a{color:inherit}@media(max-width:600px){.hero{padding:65px 20px 85px}.panel{padding:17px}.toolbar h2{font-size:27px}.events{grid-template-columns:1fr}}
 </style></head><body>
-<header><nav><div class="brand">🐾 Paws <span>&</span> History</div><button class="navbtn" onclick="document.getElementById('calendar').scrollIntoView({behavior:'smooth'})">Explore the calendar ↓</button></nav></header>
-<section class="hero"><div class="eyebrow">A celebration of our best friends</div><h1>Every dog has a story.<br>Every day deserves a tail.</h1><p>Discover the brave, the loyal, the legendary and the wonderfully ridiculous. Real canine history meets the holidays dogs would invent for themselves.</p><button class="primary" onclick="document.getElementById('calendar').scrollIntoView({behavior:'smooth'})">Explore memorable days 🐕</button></section>
-<main class="shell" id="calendar"><div class="panel"><div class="toolbar"><div><div class="eyebrow" style="color:#a67532">The annual collection</div><h2>Days worth remembering</h2></div><div class="export"><button onclick="downloadAll()">↓ Download all (.ics)</button></div></div><div class="months" id="months"></div><input class="search" id="search" placeholder="Search dogs, stories, holidays…" aria-label="Search events"><div class="filters" id="filters"></div><p id="count" style="color:#7a8b7f;font-size:13px"></p><div class="events" id="events"></div></div></main>
-<footer class="footer">Made for dogs, and the humans lucky enough to know them. Historical milestones, recognized observances and imagined celebrations are labeled separately. Dates of informal observances may vary by country.</footer>
+<header><nav><div class="brand">🐾 Paws <span>&</span> History</div><button class="navbtn" onclick="document.getElementById('calendar').scrollIntoView({behavior:'smooth'})">Prozkoumat kalendář ↓</button></nav></header>
+<section class="hero"><div class="eyebrow">Oslava našich nejlepších přátel</div><h1>Každý pes má svůj příběh.<br>Každý den může být svátek.</h1><p>Poznejte odvážné, věrné i legendární psy. Skutečné události psí historie se tu potkávají se svátky, které by si psi nejraději vymysleli sami.</p><button class="primary" onclick="document.getElementById('calendar').scrollIntoView({behavior:'smooth'})">Prozkoumat psí svátky 🐕</button></section>
+<main class="shell" id="calendar"><div class="panel"><div class="toolbar"><div><div class="eyebrow" style="color:#a67532">Kalendář na celý rok</div><h2>Dny, na které se nezapomíná</h2></div><div class="export"><button onclick="downloadAll()">↓ Stáhnout celý kalendář (.ics)</button></div></div><div class="months" id="months"></div><input class="search" id="search" placeholder="Hledat psy, příběhy a svátky…" aria-label="Hledat události"><div class="filters" id="filters"></div><p id="count" style="color:#7a8b7f;font-size:13px"></p><div class="events" id="events"></div></div></main>
+<footer class="footer">Pro psy a lidi, kteří mají štěstí, že je znají. Historické milníky, připomínané významné dny a vymyšlené svátky jsou odlišeny. Data neoficiálních svátků se mohou v různých zemích lišit.</footer>
 <script>
 const E=[
-[1,1,"The Great Sleep-In","Playful","No early walks. No alarms. Just blankets and the ancient art of doing absolutely nothing."],
-[1,29,"The Seeing Eye Founded","History","The Seeing Eye, a pioneering guide-dog school in the United States, was incorporated in 1929."],
-[2,2,"The Serum Run Reaches Nome","History","In 1925, sled dogs delivered lifesaving diphtheria antitoxin to Nome, Alaska. Balto led the final relay team; Togo and many others made the journey possible."],
-[2,14,"Unconditional Love Day","Playful","Celebrate the kind of love that survives bad haircuts, rainy walks and the sound of a treat bag opening."],
-[2,20,"Love Your Pet Day","Observance","A popular informal occasion to show appreciation for our animal companions."],
-[2,23,"Dog Biscuit Appreciation Day","Observance","A widely observed informal day for the small crunchy joys of canine life."],
-[3,8,"Hachikō Remembrance Day","History","Hachikō died in 1935 after years of returning to Tokyo's Shibuya Station, waiting for his late guardian."],
-[3,13,"K9 Veterans Day","Observance","An informal observance honoring military and working dogs and their service."],
-[3,23,"National Puppy Day","Observance","An awareness day celebrating puppies and encouraging responsible adoption."],
-[4,4,"World Stray Animals Day","Observance","A day to recognize stray animals and advocate for humane care."],
-[4,10,"Hug Your Dog Day","Observance","A popular informal observance. Give affection only when your dog enjoys it."],
-[4,11,"National Pet Day","Observance","A day to appreciate pets and encourage adoption and welfare."],
-[4,23,"Lost Dog Awareness Day","Observance","A reminder to keep identification and microchip details current."],
-[5,1,"International Day of Dog Labor","Playful","Professional sleepers, security barkers and floor-cleaning specialists deserve a day off."],
-[5,20,"Rescue Dog Day","Observance","A day highlighting the importance of rescue and adoption."],
-[6,1,"Forever Puppy Day","Playful","Every dog is a puppy today. Age is a human administrative problem."],
-[6,21,"The Endless Walk","Playful","The route is decided by the nose. The human merely holds the lead."],
-[7,6,"Selective Hearing Day","Playful","The phrase 'come here' is treated as an interesting suggestion."],
-[7,22,"Dezik and Tsygan Fly","History","In 1951, Soviet dogs Dezik and Tsygan survived a suborbital rocket flight and returned safely."],
-[7,31,"Mutt Day","Observance","A popular informal celebration of mixed-breed dogs."],
-[8,1,"DOGust: Shelter Dog Birthdays","Observance","A symbolic universal birthday for rescue dogs whose actual birthdays are unknown."],
-[8,10,"Spoil Your Dog Day","Observance","An informal day for extra enrichment, attention and appropriate treats."],
-[8,19,"Belka and Strelka Launch","History","In 1960, Belka and Strelka launched into orbit and returned safely the following day."],
-[8,26,"International Dog Day","Observance","A widely celebrated day devoted to dogs, their welfare and their remarkable roles in our lives."],
-[8,28,"Rainbow Bridge Remembrance Day","Observance","A gentle occasion to remember beloved animal companions who have died."],
-[9,15,"The Great Sniffing Festival","Playful","Every tree, gatepost and mysterious patch of grass deserves a full investigation."],
-[9,28,"World Rabies Day","Observance","A global public-health awareness day focused on preventing rabies."],
-[10,1,"Black Dog Day","Observance","An informal awareness day supporting black dogs in shelters."],
-[10,4,"World Animal Day","Observance","An international day celebrating animals and promoting their welfare."],
-[10,31,"The Night of the Haunted Vacuum","Playful","All vacuum cleaners are officially grounded until morning."],
-[11,3,"Laika Orbits Earth","History","In 1957, Laika became the first dog to orbit Earth aboard Sputnik 2. She did not survive; her story also raises serious animal-welfare questions."],
-[11,17,"Freedom of the Leash","Playful","A symbolic celebration of safe, responsible off-leash adventures."],
-[12,2,"Mutt Day, Winter Edition","Observance","A second widely circulated date celebrating mixed-breed dogs."],
-[12,24,"The Great Gift Unwrapping","Playful","Wrapping paper is now a legitimate enrichment activity. Supervision strongly recommended."],
-[12,31,"The Night of Silence","Playful","A wish for quieter celebrations and fewer fireworks, for the sake of frightened animals."]
+[1,1,"Den velkého dospávání","Playful","Žádné ranní vstávání ani budíky. Jen deky a pradávné umění nedělat vůbec nic."],
+[1,29,"Založení školy The Seeing Eye","History","V roce 1929 byla v USA založena průkopnická škola pro výcvik vodicích psů The Seeing Eye."],
+[2,2,"Záchranná štafeta dorazila do Nome","History","V roce 1925 dopravili saňoví psi do aljašského Nome život zachraňující sérum proti záškrtu. Balto vedl poslední úsek, zásadní roli měli i Togo a další psi."],
+[2,14,"Den bezpodmínečné lásky","Playful","Oslava lásky, která přežije špatný sestřih, deštivou procházku i šustění sáčku s pamlsky."],
+[2,20,"Den lásky k mazlíčkům","Observance","Oblíbený neoficiální den věnovaný našim zvířecím společníkům."],
+[2,23,"Den psích sušenek","Observance","Neoficiální svátek všech křupavých psích radostí."],
+[3,8,"Den vzpomínky na Hačikóa","History","Hačikó zemřel v roce 1935. Po mnoho let se vracel na tokijské nádraží Šibuja, kde čekal na svého zesnulého pána."],
+[3,13,"Den psích veteránů K9","Observance","Neoficiální den připomínající službu vojenských a pracovních psů."],
+[3,23,"Den štěňat","Observance","Den oslavující štěňata a podporující odpovědné adopce."],
+[4,4,"Světový den toulavých zvířat","Observance","Den upozorňující na osudy toulavých zvířat a potřebu humánní péče."],
+[4,10,"Den objetí psa","Observance","Neoficiální svátek mazlení. Objímejte ale jen psa, kterému je to příjemné."],
+[4,11,"Den domácích mazlíčků","Observance","Den vděčnosti za domácí mazlíčky, podpory adopcí a ochrany zvířat."],
+[4,23,"Den pohřešovaných psů","Observance","Připomínka, proč je důležité mít aktuální údaje u čipu a identifikaci psa."],
+[5,1,"Svátek psí práce","Playful","Profesionální spáči, hlídači i specialisté na úklid drobků si zaslouží volno."],
+[5,20,"Den zachráněných psů","Observance","Den připomínající význam záchrany psů a adopcí."],
+[6,1,"Den věčných štěňat","Playful","Každý pes je dnes štěně. Věk je pouze lidská administrativní komplikace."],
+[6,21,"Den nekonečné procházky","Playful","Trasu určuje čenich. Člověk jen drží vodítko."],
+[7,6,"Den selektivního sluchu","Playful","Povel „ke mně“ je dnes pouze nezávazným doporučením."],
+[7,22,"Let Dezika a Cygana","History","V roce 1951 přežili sovětští psi Dezik a Cygan suborbitální let raketou a bezpečně se vrátili."],
+[7,31,"Den voříšků","Observance","Oblíbená neoficiální oslava psů všech možných směsí a původů."],
+[8,1,"DOGust: narozeniny útulkových psů","Observance","Symbolické společné narozeniny zachráněných psů, jejichž skutečné datum narození není známé."],
+[8,10,"Den rozmazlování psů","Observance","Neoficiální den plný pozornosti, her a vhodných pamlsků."],
+[8,19,"Start Bělky a Strelky","History","V roce 1960 odstartovaly Bělka a Strelka na oběžnou dráhu a následující den se bezpečně vrátily."],
+[8,26,"Mezinárodní den psů","Observance","Mezinárodně připomínaný den věnovaný psům, jejich ochraně a mimořádné roli v našich životech."],
+[8,28,"Den vzpomínek za duhovým mostem","Observance","Den tichých vzpomínek na milované zvířecí společníky, kteří už tu s námi nejsou."],
+[9,15,"Velký čichací festival","Playful","Každý strom, sloupek i podezřelý trs trávy si zaslouží důkladné vyšetřování."],
+[9,28,"Světový den boje proti vzteklině","Observance","Celosvětový den osvěty a prevence vztekliny."],
+[10,1,"Den černých psů","Observance","Neoficiální den podporující černé psy v útulcích."],
+[10,4,"Světový den zvířat","Observance","Mezinárodní den věnovaný zvířatům a jejich ochraně."],
+[10,31,"Noc strašidelných vysavačů","Playful","Všechny vysavače mají až do rána přísný zákaz provozu."],
+[11,3,"Lajka na oběžné dráze","History","V roce 1957 se Lajka na palubě Sputniku 2 stala prvním psem na oběžné dráze Země. Nepřežila. Její příběh připomíná i etické otázky pokusů na zvířatech."],
+[11,17,"Den svobody vodítka","Playful","Symbolická oslava bezpečného a zodpovědného běhání bez vodítka."],
+[12,2,"Den voříšků, Winter Edition","Observance","Druhé rozšířené datum neoficiální oslavy psích kříženců."],
+[12,24,"Velké rozbalování dárků","Playful","Trhání balicího papíru je oficiálně povolenou zábavou. Pod dohledem člověka."],
+[12,31,"Noc ticha","Playful","Přání klidnějších oslav bez petard a ohňostrojů, kvůli zvířatům, která se bojí."]
 ].map((a,i)=>({month:a[0],day:a[1],title:a[2],type:a[3],description:a[4],id:i}));
-const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-let selected=new Date().getMonth()+1,category='All';
+const months=['leden','únor','březen','duben','květen','červen','červenec','srpen','září','říjen','listopad','prosinec'];
+let selected=new Date().getMonth()+1,category='Vše';
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const eventDate=e=>new Date(new Date().getFullYear(),e.month-1,e.day);
 function render(){
 $('months').innerHTML=months.map((m,i)=>'<button class="month '+(selected===i+1?'active':'')+'" onclick="selected='+(i+1)+';render()">'+m.slice(0,3)+'</button>').join('');
-$('filters').innerHTML=['All','History','Observance','Playful'].map(c=>'<button class="filter '+(category===c?'active':'')+'" onclick="category=\''+c+'\';render()">'+c+'</button>').join('');
-let q=$('search').value.toLowerCase();let items=E.filter(e=>(e.month===selected||q)&& (category==='All'||e.type===category) &&(!q||(e.title+' '+e.description+' '+e.type).toLowerCase().includes(q)));
-$('count').textContent=items.length+' memorable '+(items.length===1?'day':'days')+(q?' found':' in '+months[selected-1]);
-$('events').innerHTML=items.length?items.map(e=>'<article class="event"><span class="tag">'+esc(e.type)+'</span><div class="date">'+months[e.month-1]+' '+e.day+'</div><h3>'+esc(e.title)+'</h3><p>'+esc(e.description)+'</p><div class="actions"><button onclick="downloadOne('+e.id+')">↓ Apple / Outlook</button><button onclick="google('+e.id+')">Google Calendar ↗</button><button onclick="share('+e.id+')">Share ↗</button></div></article>').join(''):'<div class="empty">No stories found. Try another month or search.</div>';
+$('filters').innerHTML=['Vše','Historie','Významný den','Psí svátek'].map(c=>'<button class="filter '+(category===c?'active':'')+'" onclick="category=\''+c+'\';render()">'+c+'</button>').join('');
+let q=$('search').value.toLowerCase();let items=E.filter(e=>(e.month===selected||q)&& (category==='Vše'||e.type===category) &&(!q||(e.title+' '+e.description+' '+e.type).toLowerCase().includes(q)));
+$('count').textContent=items.length+' událostí'+(q?' nalezeno':' v měsíci '+months[selected-1]);
+$('events').innerHTML=items.length?items.map(e=>'<article class="event"><span class="tag">'+esc(e.type)+'</span><div class="date">'+months[e.month-1]+' '+e.day+'</div><h3>'+esc(e.title)+'</h3><p>'+esc(e.description)+'</p><div class="actions"><button onclick="downloadOne('+e.id+')">↓ Apple / Outlook</button><button onclick="google('+e.id+')">Kalendář Google ↗</button><button onclick="share('+e.id+')">Sdílet ↗</button></div></article>').join(''):'<div class="empty">Žádné události. Zkuste jiný měsíc nebo hledání.</div>';
 }
 $('search').addEventListener('input',render);
 function stamp(d){return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+pad(d.getUTCSeconds())+'Z'}
@@ -66,7 +66,7 @@ function icsEsc(s){return s.replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/
 function entry(e){let start=icsDate(e),end=new Date(new Date().getFullYear(),e.month-1,e.day+1);return ['BEGIN:VEVENT','UID:paws-history-'+e.id+'@paws-and-history','DTSTAMP:'+stamp(new Date()),'DTSTART;VALUE=DATE:'+start,'DTEND;VALUE=DATE:'+end.getFullYear()+pad(end.getMonth()+1)+pad(end.getDate()),'RRULE:FREQ=YEARLY','SUMMARY:'+icsEsc('🐾 '+e.title),'DESCRIPTION:'+icsEsc(e.description+' | '+e.type),'END:VEVENT'].join('\r\n')}
 function download(items,name){let txt='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Paws and History//EN\r\nCALSCALE:GREGORIAN\r\n'+items.map(entry).join('\r\n')+'\r\nEND:VCALENDAR\r\n';let u=URL.createObjectURL(new Blob([txt],{type:'text/calendar;charset=utf-8'}));let a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),2000)}
 function downloadOne(i){download([E[i]],'paws-history-event.ics')}function downloadAll(){download(E,'paws-and-history-full-calendar.ics')}
-function google(i){let e=E[i],year=new Date().getFullYear(),start=year+pad(e.month)+pad(e.day),end=new Date(year,e.month-1,e.day+1),endS=end.getFullYear()+pad(end.getMonth()+1)+pad(end.getDate());let p=new URLSearchParams({action:'TEMPLATE',text:'🐾 '+e.title,details:e.description+' ('+e.type+'). Recurs annually.',dates:start+'/'+endS,recur:'RRULE:FREQ=YEARLY'});window.open('https://calendar.google.com/calendar/render?'+p,'_blank','noopener')}
-async function share(i){let e=E[i],text=e.title+' — '+e.description,url=location.href.split('#')[0]+'#event-'+e.id;if(navigator.share){try{await navigator.share({title:e.title,text,url});return}catch(_){}}if(navigator.clipboard){await navigator.clipboard.writeText(text+' '+url);alert('Event copied to clipboard.')}else prompt('Copy event:',text+' '+url)}
+function google(i){let e=E[i],year=new Date().getFullYear(),start=year+pad(e.month)+pad(e.day),end=new Date(year,e.month-1,e.day+1),endS=end.getFullYear()+pad(end.getMonth()+1)+pad(end.getDate());let p=new URLSearchParams({action:'TEMPLATE',text:'🐾 '+e.title,details:e.description+' ('+e.type+'). Opakuje se každý rok.',dates:start+'/'+endS,recur:'RRULE:FREQ=YEARLY'});window.open('https://calendar.google.com/calendar/render?'+p,'_blank','noopener')}
+async function share(i){let e=E[i],text=e.title+' — '+e.description,url=location.href.split('#')[0]+'#event-'+e.id;if(navigator.share){try{await navigator.share({title:e.title,text,url});return}catch(_){}}if(navigator.clipboard){await navigator.clipboard.writeText(text+' '+url);alert('Událost zkopírována do schránky.')}else prompt('Copy event:',text+' '+url)}
 let hash=location.hash.match(/event-(\d+)/);if(hash&&E[+hash[1]])selected=E[+hash[1]].month;render();
 </script></body></html>
