@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plánovač zateplení</title>
+  <meta name="description" content="Zadejte rozměry střechy, stropu nebo fasády a získejte doporučení izolace včetně přesného množství k nákupu.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="demo-banner" class="demo-banner" hidden>
+    Ukázková produktová data – tloušťky a obsahy balení před ostrým provozem ověřte podle aktuálních technických listů.
+  </div>
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="logo">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 16 16 5l12 11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M8 14v13h16V14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M11 20c2-2 3 2 5 0s3 2 5 0" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <div>
+          <strong id="app-name">Plánovač zateplení</strong>
+          <span id="app-company"></span>
+        </div>
+      </div>
+      <button type="button" class="btn ghost small" id="btn-reset">Nový projekt</button>
+    </div>
+  </header>
+
+  <nav class="stepper wrap" aria-label="Kroky plánovače">
+    <button type="button" class="step" data-go="1"><span>1</span>Cíl a priority</button>
+    <button type="button" class="step" data-go="2"><span>2</span>Konstrukce a rozměry</button>
+    <button type="button" class="step" data-go="3"><span>3</span>Doporučení a nákup</button>
+  </nav>
+
+  <main class="wrap" id="main">
+    <!-- KROK 1 -->
+    <section class="panel" data-step="1">
+      <h1>Naplánujte zateplení svého domu</h1>
+      <p class="lead">Během pár minut zjistíte, jakou izolaci a v jaké tloušťce potřebujete – a kolik balení koupit.</p>
+
+      <div class="field">
+        <label for="project-name">Název projektu</label>
+        <input id="project-name" type="text" maxlength="60" placeholder="např. Rodinný dům – podkroví">
+      </div>
+
+      <fieldset class="choice-group">
+        <legend>Jak dobře chcete izolovat?</legend>
+        <div class="choices" id="level-choices"></div>
+      </fieldset>
+
+      <fieldset class="choice-group">
+        <legend>Co je pro vás nejdůležitější?</legend>
+        <div class="choices" id="priority-choices"></div>
+      </fieldset>
+
+      <details class="advanced">
+        <summary>Pokročilé nastavení</summary>
+        <div class="field narrow">
+          <label for="waste">Rezerva na prořez</label>
+          <div class="input-unit"><input id="waste" type="number" min="0" max="30" step="1" placeholder="auto"><span>%</span></div>
+          <p class="hint">Ponechte prázdné: role 5 %, desky 3 %.</p>
+        </div>
+      </details>
+
+      <div class="actions">
+        <button type="button" class="btn primary" data-go="2">Pokračovat</button>
+      </div>
+    </section>
+
+    <!-- KROK 2 -->
+    <section class="panel" data-step="2" hidden>
+      <h1>Co budete zateplovat?</h1>
+      <p class="lead">Přidejte jednotlivé konstrukce nebo místnosti. Každou můžete zadat rozměry nebo přímo plochou.</p>
+
+      <div id="items"></div>
+
+      <div class="add-block">
+        <h2 class="add-title" id="add-title">Přidat konstrukci</h2>
+        <div class="type-grid" id="type-grid"></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn ghost" data-go="1">Zpět</button>
+        <button type="button" class="btn primary" data-go="3" id="btn-calc">Zobrazit doporučení</button>
+      </div>
+    </section>
+
+    <!-- KROK 3 -->
+    <section class="panel" data-step="3" hidden>
+      <div class="result-head">
+        <div>
+          <h1 id="result-title">Vaše doporučení</h1>
+          <p class="lead" id="result-sub"></p>
+        </div>
+        <div class="result-actions no-print">
+          <button type="button" class="btn ghost small" id="btn-copy">Kopírovat seznam</button>
+          <button type="button" class="btn ghost small" id="btn-print">Tisk / PDF</button>
+        </div>
+      </div>
+
+      <div class="tiles" id="tiles"></div>
+
+      <h2>Nákupní seznam</h2>
+      <div id="shopping"></div>
+
+      <h2>Doporučená skladba podle konstrukcí</h2>
+      <div id="results" aria-live="polite"></div>
+
+      <aside class="disclaimer">
+        Výpočet je orientační (princip ČSN EN ISO 6946, normové hodnoty ČSN 73 0540-2) a nenahrazuje projektovou dokumentaci.
+        Skutečná spotřeba se může lišit podle tvaru konstrukce a způsobu pokládky. U žádostí o dotace doložte výpočet od projektanta nebo energetického specialisty.
+      </aside>
+
+      <div class="actions no-print">
+        <button type="button" class="btn ghost" data-go="2">Upravit konstrukce</button>
+        <a class="btn primary" id="btn-contact" href="#">Poptat u prodejce</a>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/catalog.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
