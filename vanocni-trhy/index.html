@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Vánoční trhy</title>
+<meta name="description" content="Mapa vánočních trhů v Česku a sousedních zemích. Nakreslete prstem oblast a zobrazte trhy v ní.">
+<meta name="theme-color" content="#7a1f2b">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#fbf8f3; --panel:#ffffff; --ink:#1f1a17; --muted:#6b625b; --line:#e7e0d6;
+  --accent:#7a1f2b; --accent-ink:#fff; --gold:#c8962e; --open:#2e7d4f; --soon:#c8962e; --closed:#9a928b;
+  --shadow:0 6px 24px rgba(30,20,10,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15120f; --panel:#1f1b17; --ink:#f3ede6; --muted:#a9a097; --line:#352f29;
+    --accent:#c4454f; --accent-ink:#fff; --gold:#e0b04a; --open:#4fbf7d; --soon:#e0b04a; --closed:#7c746c;
+    --shadow:0 6px 24px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15120f; --panel:#1f1b17; --ink:#f3ede6; --muted:#a9a097; --line:#352f29;
+  --accent:#c4454f; --accent-ink:#fff; --gold:#e0b04a; --open:#4fbf7d; --soon:#e0b04a; --closed:#7c746c;
+  --shadow:0 6px 24px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#map{position:fixed;inset:0;z-index:0;background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+
+/* top bar */
+.topbar{position:fixed;top:calc(10px + env(safe-area-inset-top));left:12px;right:12px;z-index:500;
+  display:flex;gap:8px;align-items:center;pointer-events:none}
+.brand{pointer-events:auto;background:var(--accent);color:var(--accent-ink);padding:9px 14px;border-radius:999px;
+  font-weight:700;box-shadow:var(--shadow);white-space:nowrap}
+.spacer{flex:1}
+.tbtn{pointer-events:auto;border:0;background:var(--panel);color:var(--ink);height:42px;min-width:42px;padding:0 14px;
+  border-radius:999px;box-shadow:var(--shadow);font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.tbtn.active{background:var(--gold);color:#1f1a17}
+.tbtn.icon{padding:0;justify-content:center;font-size:18px}
+.hint{position:fixed;top:calc(62px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:500;
+  background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:14px;box-shadow:var(--shadow);
+  max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(46vh + 12px);transform:translateX(-50%);z-index:700;background:var(--ink);color:var(--bg);
+  padding:8px 14px;border-radius:10px;font-size:14px;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center;
+  opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* drawing mode */
+body.drawing #map, body.drawing #map *{touch-action:none !important;cursor:crosshair !important}
+
+/* bottom sheet */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:600;background:var(--panel);border-radius:18px 18px 0 0;
+  box-shadow:0 -6px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;height:44vh;
+  transition:height .25s ease;padding-bottom:env(safe-area-inset-bottom)}
+.sheet[data-state="min"]{height:calc(64px + env(safe-area-inset-bottom))}
+.sheet[data-state="max"]{height:86vh}
+.sheet-handle{border:0;background:none;padding:8px 16px 6px;display:flex;flex-direction:column;align-items:stretch;gap:6px;text-align:left}
+.grab{align-self:center;width:42px;height:5px;border-radius:3px;background:var(--line)}
+.sheet-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sheet-title strong{font-size:17px}
+.sheet-title span{color:var(--muted);font-size:13px}
+.filters{display:flex;gap:6px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none;flex-shrink:0}
+.filters::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 11px;font-size:13px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#list{list-style:none;margin:0;padding:0 8px 16px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+#list li{border-top:1px solid var(--line)}
+.item{display:flex;gap:12px;width:100%;border:0;background:none;text-align:left;padding:11px 8px;border-radius:10px}
+.item:hover{background:color-mix(in srgb,var(--line) 45%,transparent)}
+.item .ico{font-size:22px;line-height:1}
+.item .body{flex:1;min-width:0}
+.item .name{font-weight:650}
+.item .meta{color:var(--muted);font-size:13px}
+.item .dist{font-weight:700;color:var(--accent);white-space:nowrap;font-size:14px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;color:#fff;vertical-align:1px}
+.b-open{background:var(--open)} .b-soon{background:var(--soon);color:#1f1a17} .b-closed{background:var(--closed)}
+.empty{color:var(--muted);padding:18px 12px;text-align:center}
+.note{color:var(--muted);font-size:12px;padding:10px 12px 0}
+
+@media (min-width:900px){
+  .sheet,.sheet[data-state]{top:0;bottom:0;right:auto;width:380px;height:auto;border-radius:0;
+    padding-top:calc(64px + env(safe-area-inset-top))}
+  .grab{display:none}
+  .topbar{left:12px}
+  .leaflet-left{left:380px}
+  .toast{bottom:24px;left:calc(50% + 190px)}
+  .hint{left:calc(50% + 190px)}
+}
+
+/* markers */
+.pin{width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;
+  background:var(--open);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.pin span{transform:rotate(45deg);font-size:16px}
+.pin.soon{background:var(--soon)} .pin.closed{background:var(--closed)}
+.pin.dim{opacity:.35}
+.me{width:18px;height:18px;border-radius:50%;background:#2a7de1;border:3px solid #fff;box-shadow:0 0 0 0 rgba(42,125,225,.6);
+  animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(42,125,225,.55)}70%{box-shadow:0 0 0 16px rgba(42,125,225,0)}100%{box-shadow:0 0 0 0 rgba(42,125,225,0)}}
+
+/* popup */
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--ink)}
+.leaflet-popup-content{margin:14px 16px;font-size:14px;line-height:1.45;min-width:220px}
+.pop h3{margin:0 0 2px;font-size:16px}
+.pop .sub{color:var(--muted);font-size:13px;margin-bottom:8px}
+.pop dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:8px 0}
+.pop dt{color:var(--muted)} .pop dd{margin:0}
+.pop p{margin:8px 0}
+.pop .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.pop .acts a{flex:1;text-align:center;text-decoration:none;padding:8px 10px;border-radius:8px;font-weight:600;font-size:13px;
+  background:var(--accent);color:var(--accent-ink)}
+.pop .acts a.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
+.leaflet-bar a{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.leaflet-control-attribution{font-size:10px}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Mapa vánočních trhů"></div>
+
+<header class="topbar">
+  <div class="brand">🎄 Vánoční trhy</div>
+  <div class="spacer"></div>
+  <button class="tbtn icon" id="btnLocate" title="Moje poloha" aria-label="Moje poloha">📍</button>
+  <button class="tbtn" id="btnDraw" aria-pressed="false">✏️ <span>Oblast</span></button>
+  <button class="tbtn icon" id="btnClear" title="Zrušit oblast" aria-label="Zrušit oblast" hidden>✕</button>
+</header>
+<div class="hint" id="hint" hidden>Táhněte prstem po mapě a obkreslete oblast</div>
+<div class="toast" id="toast" role="status"></div>
+
+<section class="sheet" id="sheet" data-state="mid">
+  <button class="sheet-handle" id="sheetHandle" aria-label="Rozbalit / sbalit seznam">
+    <span class="grab"></span>
+    <span class="sheet-title"><strong id="sheetTitle">Trhy</strong><span id="sheetSub"></span></span>
+  </button>
+  <div class="filters" id="filters"></div>
+  <ul id="list"></ul>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ---------- Data ----------
+   Dates are approximate for season 2026/27 (based on usual patterns). Always verify with the organizer. */
+const MARKETS = [
+  // Česko
+  {n:"Staroměstské náměstí",c:"Praha",cc:"CZ",lat:50.0875,lng:14.4213,f:"2026-11-28",t:"2027-01-06",h:"10:00–22:00",d:"Nejslavnější pražské trhy s velkým vánočním stromem před Týnským chrámem, pódiem s programem a výhledem na orloj."},
+  {n:"Václavské náměstí",c:"Praha",cc:"CZ",lat:50.0814,lng:14.4280,f:"2026-11-28",t:"2027-01-06",h:"10:00–22:00",d:"Dlouhá řada stánků v dolní části náměstí. Trdelníky, klobásy, svařák a řemeslné suvenýry."},
+  {n:"Náměstí Míru",c:"Praha",cc:"CZ",lat:50.0755,lng:14.4372,f:"2026-11-28",t:"2026-12-24",h:"10:00–21:00",d:"Komornější trhy před kostelem sv. Ludmily, oblíbené u místních. Hodně ručních výrobků."},
+  {n:"Pražský hrad",c:"Praha",cc:"CZ",lat:50.0904,lng:14.4004,f:"2026-11-28",t:"2027-01-06",h:"10:00–19:00",d:"Stánky na nádvoří u katedrály sv. Víta. Dobré spojit s procházkou Hradčany."},
+  {n:"Náměstí Jiřího z Poděbrad",c:"Praha",cc:"CZ",lat:50.0779,lng:14.4500,f:"2026-11-28",t:"2026-12-24",h:"10:00–21:00",d:"Sousedské trhy na Vinohradech s farmářskými dobrotami a punčem."},
+  {n:"Náměstí Svobody",c:"Brno",cc:"CZ",lat:49.1951,lng:16.6083,f:"2026-11-20",t:"2026-12-23",h:"10:00–22:00",d:"Hlavní brněnské trhy s velkým stromem a kulturním programem. Jsou jedny z nejživějších v ČR."},
+  {n:"Zelný trh",c:"Brno",cc:"CZ",lat:49.1925,lng:16.6081,f:"2026-11-20",t:"2026-12-23",h:"10:00–21:00",d:"Betlém, pohádkový program pro děti a ochutnávky moravských vín."},
+  {n:"Moravské náměstí",c:"Brno",cc:"CZ",lat:49.1985,lng:16.6085,f:"2026-11-20",t:"2026-12-23",h:"10:00–21:00",d:"Kluziště a gastro stánky. Dobrá volba pro rodiny."},
+  {n:"Masarykovo náměstí",c:"Ostrava",cc:"CZ",lat:49.8357,lng:18.2925,f:"2026-11-20",t:"2026-12-23",h:"10:00–22:00",d:"Velký strom, pódium s koncerty a řemeslný jarmark v centru Ostravy."},
+  {n:"Horní a Dolní náměstí",c:"Olomouc",cc:"CZ",lat:49.5938,lng:17.2509,f:"2026-11-20",t:"2026-12-23",h:"10:00–21:00",d:"Trhy kolem morového sloupu (UNESCO), vyhlídkové kolo a kluziště."},
+  {n:"Náměstí Republiky",c:"Plzeň",cc:"CZ",lat:49.7477,lng:13.3776,f:"2026-11-27",t:"2026-12-23",h:"10:00–21:00",d:"Trhy pod katedrálou sv. Bartoloměje s kluzištěm a betlémem."},
+  {n:"Náměstí Přemysla Otakara II.",c:"České Budějovice",cc:"CZ",lat:48.9745,lng:14.4743,f:"2026-11-27",t:"2026-12-23",h:"10:00–21:00",d:"Na jednom z největších náměstí v Evropě. Velký strom a pódium."},
+  {n:"Advent v Krumlově",c:"Český Krumlov",cc:"CZ",lat:48.8109,lng:14.3152,f:"2026-11-27",t:"2027-01-06",h:"10:00–19:00",d:"Pohádková atmosféra historického města pod zámkem. Živý betlém a koncerty."},
+  {n:"Masarykovo náměstí",c:"Hradec Králové",cc:"CZ",lat:50.2096,lng:15.8323,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Vánoční trhy a program v centru Hradce."},
+  {n:"Pernštýnské náměstí",c:"Pardubice",cc:"CZ",lat:50.0383,lng:15.7787,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Pernštýnské náměstí s Zelenou bránou. Perníky a pardubické dobroty."},
+  {n:"Náměstí Dr. E. Beneše",c:"Liberec",cc:"CZ",lat:50.7697,lng:15.0583,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Trhy před novorenesanční radnicí, sklářské a bižuterní ozdoby z Jizerských hor."},
+  {n:"Lidické náměstí",c:"Ústí nad Labem",cc:"CZ",lat:50.6606,lng:14.0323,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Městské vánoční trhy s doprovodným programem."},
+  {n:"Vánoční trhy v Dvořákových sadech",c:"Karlovy Vary",cc:"CZ",lat:50.2262,lng:12.8794,f:"2026-11-27",t:"2027-01-04",h:"10:00–20:00",d:"Trhy v lázeňském prostředí, karlovarské oplatky a Becherovka."},
+  {n:"Masarykovo náměstí",c:"Jihlava",cc:"CZ",lat:49.3961,lng:15.5912,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Vánoční jarmark na jednom z největších náměstí v ČR."},
+  {n:"Náměstí Míru",c:"Zlín",cc:"CZ",lat:49.2266,lng:17.6670,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Zlínské vánoční trhy s valašskými specialitami."},
+  {n:"Advent v Telči",c:"Telč",cc:"CZ",lat:49.1842,lng:15.4528,f:"2026-11-28",t:"2026-12-20",h:"10:00–18:00",d:"Malebné renesanční náměstí (UNESCO). Komorní a velmi fotogenické."},
+  {n:"Palackého náměstí",c:"Kutná Hora",cc:"CZ",lat:49.9488,lng:15.2681,f:"2026-11-28",t:"2026-12-23",h:"10:00–19:00",d:"Stříbrné město a vánoční trhy, které jde spojit s návštěvou chrámu sv. Barbory."},
+  {n:"Žižkovo náměstí",c:"Tábor",cc:"CZ",lat:49.4136,lng:14.6577,f:"2026-11-28",t:"2026-12-23",h:"10:00–19:00",d:"Husitské město, vánoční trhy a program na historickém náměstí."},
+  {n:"Velké náměstí",c:"Kroměříž",cc:"CZ",lat:49.2980,lng:17.3933,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Trhy pod arcibiskupským zámkem."},
+  {n:"Masarykovo náměstí",c:"Třeboň",cc:"CZ",lat:49.0037,lng:14.7700,f:"2026-11-28",t:"2026-12-23",h:"10:00–18:00",d:"Jihočeské vánoční trhy s rybími specialitami a výprodejem kaprů."},
+  {n:"Smetanovo náměstí",c:"Litomyšl",cc:"CZ",lat:49.8700,lng:16.3125,f:"2026-11-28",t:"2026-12-20",h:"10:00–18:00",d:"Zámecké město UNESCO a podloubí plná stánků."},
+  {n:"Advent v Mikulově",c:"Mikulov",cc:"CZ",lat:48.8056,lng:16.6378,f:"2026-11-28",t:"2026-12-20",h:"10:00–19:00",d:"Vánoční trhy pod zámkem a ochutnávky pálavských vín."},
+  {n:"Masarykovo náměstí",c:"Znojmo",cc:"CZ",lat:48.8555,lng:16.0488,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Znojemské vánoční trhy, burčák vystřídá svařené víno."},
+  {n:"Horní náměstí",c:"Opava",cc:"CZ",lat:49.9381,lng:17.9024,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Slezské vánoční trhy kolem Hlásky."},
+  // Německo
+  {n:"Striezelmarkt",c:"Drážďany",cc:"DE",lat:51.0503,lng:13.7380,f:"2026-11-25",t:"2026-12-24",h:"10:00–21:00",d:"Nejstarší doložený vánoční trh v Německu (1434). Obří pyramida a drážďanská štola."},
+  {n:"Weihnachtsmarkt",c:"Lipsko",cc:"DE",lat:51.3397,lng:12.3750,f:"2026-11-24",t:"2026-12-23",h:"10:00–21:00",d:"Přes 250 stánků v historickém centru, finská vesnička a středověký trh."},
+  {n:"Christkindlesmarkt",c:"Norimberk",cc:"DE",lat:49.4539,lng:11.0775,f:"2026-11-27",t:"2026-12-24",h:"10:00–21:00",d:"Světoznámý trh na Hauptmarktu. Perníky Lebkuchen, klobásky a figurky ze sušených švestek."},
+  {n:"Christkindlmarkt Marienplatz",c:"Mnichov",cc:"DE",lat:48.1374,lng:11.5755,f:"2026-11-23",t:"2026-12-24",h:"10:00–21:00",d:"Hlavní mnichovský trh před radnicí, denně koncerty z balkonu radnice."},
+  {n:"Christkindlmarkt Neupfarrplatz",c:"Řezno",cc:"DE",lat:49.0186,lng:12.0965,f:"2026-11-23",t:"2026-12-23",h:"10:00–20:30",d:"Tradiční trh v centru Řezna."},
+  {n:"Romantischer Weihnachtsmarkt Schloss Thurn und Taxis",c:"Řezno",cc:"DE",lat:49.0156,lng:12.0950,f:"2026-11-20",t:"2026-12-23",h:"11:00–22:00",d:"Romantický trh na zámeckých nádvořích, vstup je placený. Ohňové koše a řemesla."},
+  {n:"Christkindlmarkt am Domplatz",c:"Pasov",cc:"DE",lat:48.5745,lng:13.4652,f:"2026-11-20",t:"2026-12-24",h:"10:00–20:00",d:"Trh pod dómem sv. Štěpána, blízko českých hranic."},
+  {n:"Weihnachtszauber Gendarmenmarkt",c:"Berlín",cc:"DE",lat:52.5136,lng:13.3925,f:"2026-11-23",t:"2026-12-31",h:"12:00–22:00",d:"Elegantní trh mezi dvěma dómy, s kulturním programem."},
+  {n:"Weihnachtsmarkt Schloss Charlottenburg",c:"Berlín",cc:"DE",lat:52.5208,lng:13.2957,f:"2026-11-23",t:"2026-12-26",h:"12:00–22:00",d:"Trh před barokním zámkem. Večer je zámek nasvícený."},
+  {n:"Weihnachtsmarkt Domplatz",c:"Erfurt",cc:"DE",lat:50.9758,lng:11.0236,f:"2026-11-24",t:"2026-12-22",h:"10:00–21:00",d:"Trh pod katedrálou s velkou pyramidou a betlémem v životní velikosti."},
+  {n:"Weihnachtsmarkt Maxplatz",c:"Bamberk",cc:"DE",lat:49.8935,lng:10.8870,f:"2026-11-23",t:"2026-12-23",h:"10:00–20:30",d:"Franský trh v městě UNESCO a bamberská stezka betlémů."},
+  {n:"Reiterlesmarkt",c:"Rothenburg ob der Tauber",cc:"DE",lat:49.3772,lng:10.1789,f:"2026-11-27",t:"2026-12-23",h:"11:00–19:30",d:"Středověké hradbami obehnané městečko, sněhové koule (Schneeballen)."},
+  {n:"Weihnachtsmarkt",c:"Annaberg-Buchholz",cc:"DE",lat:50.5793,lng:13.0036,f:"2026-11-27",t:"2026-12-23",h:"11:00–20:00",d:"Krušnohorská tradice: pyramidy, hornické průvody a dřevěné figurky."},
+  {n:"Weihnachtsmarkt",c:"Seiffen",cc:"DE",lat:50.6475,lng:13.4530,f:"2026-11-27",t:"2026-12-23",h:"10:00–19:00",d:"Vesnice hraček v Krušných horách. Louskáčci a svíčkové pyramidy přímo od výrobců."},
+  {n:"Christmarkt",c:"Freiberg",cc:"DE",lat:50.9170,lng:13.3417,f:"2026-11-26",t:"2026-12-23",h:"10:00–20:00",d:"Hornické město a velká pyramida na Obermarktu."},
+  {n:"Wenzelsmarkt",c:"Budyšín",cc:"DE",lat:51.1814,lng:14.4244,f:"2026-11-26",t:"2026-12-23",h:"10:00–20:00",d:"Jeden z nejstarších trhů v Sasku, s lužickosrbskými tradicemi a malovanými kraslicemi."},
+  {n:"Schlesischer Christkindelmarkt",c:"Zhořelec",cc:"DE",lat:51.1554,lng:14.9877,f:"2026-11-27",t:"2026-12-20",h:"11:00–20:00",d:"Slezský trh na Untermarktu, přes most se dá přejít do polského Zgorzelce."},
+  {n:"Weihnachtsmarkt",c:"Chemnitz",cc:"DE",lat:50.8322,lng:12.9200,f:"2026-11-26",t:"2026-12-23",h:"10:00–20:00",d:"Krušnohorský trh s jednou z největších pyramid, Chemnitz je Evropským hlavním městem kultury 2025."},
+  {n:"Christkindlesmarkt",c:"Augsburg",cc:"DE",lat:48.3690,lng:10.8980,f:"2026-11-23",t:"2026-12-24",h:"10:00–20:30",d:"Trh před renesanční radnicí. Andělé v oknech radnice zpívají."},
+  {n:"Weihnachtsmarkt",c:"Würzburg",cc:"DE",lat:49.7944,lng:9.9294,f:"2026-11-27",t:"2026-12-23",h:"10:00–20:00",d:"Kolem Marienkapelle. Franské víno a Glühwein."},
+  {n:"Stuttgarter Weihnachtsmarkt",c:"Stuttgart",cc:"DE",lat:48.7758,lng:9.1829,f:"2026-11-25",t:"2026-12-23",h:"10:00–21:00",d:"Jeden z největších trhů v Evropě, stánky s bohatě zdobenými střechami."},
+  {n:"Weihnachtsmarkt am Römerberg",c:"Frankfurt n. M.",cc:"DE",lat:50.1106,lng:8.6821,f:"2026-11-23",t:"2026-12-22",h:"10:00–21:00",d:"Trh na Römerbergu a Paulsplatzu mezi hrázděnými domy."},
+  {n:"Weihnachtsmarkt am Kölner Dom",c:"Kolín n. R.",cc:"DE",lat:50.9413,lng:6.9583,f:"2026-11-23",t:"2026-12-23",h:"11:00–21:00",d:"Trh přímo pod katedrálou s obřím světelným baldachýnem."},
+  // Rakousko
+  {n:"Wiener Christkindlmarkt Rathausplatz",c:"Vídeň",cc:"AT",lat:48.2108,lng:16.3576,f:"2026-11-13",t:"2026-12-26",h:"10:00–22:00",d:"Největší vídeňský trh před radnicí, světelný park a bruslařská dráha."},
+  {n:"Weihnachtsmarkt Schloss Schönbrunn",c:"Vídeň",cc:"AT",lat:48.1845,lng:16.3122,f:"2026-11-21",t:"2027-01-04",h:"10:00–21:00",d:"Kvalitní řemesla před císařským zámkem, po Vánocích pokračuje novoroční trh."},
+  {n:"Weihnachtsmarkt am Spittelberg",c:"Vídeň",cc:"AT",lat:48.2034,lng:16.3537,f:"2026-11-12",t:"2026-12-23",h:"14:00–21:30",d:"Biedermeierové uličky, umělecká řemesla. Atmosférou spíš alternativní."},
+  {n:"Weihnachtsdorf Schloss Belvedere",c:"Vídeň",cc:"AT",lat:48.1915,lng:16.3809,f:"2026-11-20",t:"2026-12-23",h:"11:00–21:00",d:"Vánoční vesnička před barokním Belvederem."},
+  {n:"Art Advent Karlsplatz",c:"Vídeň",cc:"AT",lat:48.1985,lng:16.3716,f:"2026-11-20",t:"2026-12-23",h:"12:00–20:00",d:"Umělecký trh před Karlskirche s bio gastronomií. Dětem se bude líbit sláma a poníci."},
+  {n:"Salzburger Christkindlmarkt",c:"Salcburk",cc:"AT",lat:47.7980,lng:13.0470,f:"2026-11-19",t:"2027-01-01",h:"10:00–20:30",d:"Na Domplatzu a Residenzplatzu pod pevností. Jeden z nejstarších trhů v Rakousku."},
+  {n:"Christkindlmarkt Hauptplatz",c:"Linec",cc:"AT",lat:48.3058,lng:14.2865,f:"2026-11-20",t:"2026-12-24",h:"10:00–21:00",d:"Na hlavním náměstí, kousek od českých hranic."},
+  {n:"Christkindlmarkt Altstadt",c:"Innsbruck",cc:"AT",lat:47.2685,lng:11.3933,f:"2026-11-15",t:"2027-01-06",h:"11:00–21:00",d:"Pod Zlatou stříškou s alpskou kulisou."},
+  {n:"Advent in Graz",c:"Štýrský Hradec",cc:"AT",lat:47.0712,lng:15.4383,f:"2026-11-20",t:"2026-12-24",h:"10:00–21:00",d:"Kolem 15 trhů v centru, mezi nimi ledový betlém na Landhaushofu."},
+  {n:"Wolfgangseer Advent",c:"St. Wolfgang",cc:"AT",lat:47.7390,lng:13.4480,f:"2026-11-20",t:"2026-12-20",h:"čt–ne 10:00–19:00",d:"Romantický advent u jezera Wolfgangsee s plovoucí lucernou na jezeře."},
+  {n:"Christkindlmarkt",c:"Steyr",cc:"AT",lat:48.0400,lng:14.4190,f:"2026-11-27",t:"2026-12-23",h:"10:00–19:00",d:"Gotické město a nedaleká obec Christkindl s vánoční poštou."},
+  {n:"Christkindlmarkt Neuer Platz",c:"Klagenfurt",cc:"AT",lat:46.6240,lng:14.3080,f:"2026-11-13",t:"2026-12-24",h:"10:00–21:00",d:"Korutanský trh u kašny s drakem Lindwurm."},
+  // Slovensko
+  {n:"Hlavné a Františkánske námestie",c:"Bratislava",cc:"SK",lat:48.1435,lng:17.1083,f:"2026-11-20",t:"2026-12-23",h:"10:00–22:00",d:"Lokše, cigánska pečienka a medovina ve starém městě."},
+  {n:"Vianočné trhy Hlavná ulica",c:"Košice",cc:"SK",lat:48.7206,lng:21.2583,f:"2026-11-20",t:"2026-12-23",h:"10:00–21:00",d:"Trh u katedrály sv. Alžběty s velkým stromem."},
+  {n:"Vianočné trhy",c:"Banská Štiavnica",cc:"SK",lat:48.4588,lng:18.8930,f:"2026-11-28",t:"2026-12-23",h:"10:00–19:00",d:"Komorní trhy v historickém hornickém městě UNESCO."},
+  {n:"Trnavské Vianoce",c:"Trnava",cc:"SK",lat:48.3774,lng:17.5872,f:"2026-11-27",t:"2026-12-23",h:"10:00–21:00",d:"Na Trojičném námestí, „malý Řím“ s mnoha věžemi."},
+  {n:"Vianočné trhy Mariánske námestie",c:"Žilina",cc:"SK",lat:49.2232,lng:18.7393,f:"2026-11-27",t:"2026-12-23",h:"10:00–21:00",d:"Na náměstí s podloubím pod Katedrálou Najsvätejšej Trojice."},
+  // Polsko
+  {n:"Jarmark Bożonarodzeniowy",c:"Vratislav",cc:"PL",lat:51.1100,lng:17.0320,f:"2026-11-20",t:"2026-12-31",h:"10:00–21:00",d:"Jeden z nejhezčích trhů v Polsku, na rynku a ulici Świdnické. Hledejte trpaslíky!"},
+  {n:"Targi Bożonarodzeniowe Rynek Główny",c:"Krakov",cc:"PL",lat:50.0617,lng:19.9373,f:"2026-11-27",t:"2027-01-01",h:"10:00–22:00",d:"Na největším středověkém náměstí Evropy, oscypek a pečené kaštany."},
+  {n:"Jarmark Bożonarodzeniowy",c:"Katovice",cc:"PL",lat:50.2590,lng:19.0230,f:"2026-11-27",t:"2026-12-23",h:"10:00–21:00",d:"Moderní rynek v centru Katovic s vyhlídkovým kolem."},
+  {n:"Betlejem Poznańskie",c:"Poznaň",cc:"PL",lat:52.4080,lng:16.9330,f:"2026-11-20",t:"2026-12-23",h:"11:00–21:00",d:"Na Placu Wolności a s festivalem ledových soch."},
+  {n:"Jarmark Bożonarodzeniowy",c:"Varšava",cc:"PL",lat:52.2497,lng:21.0122,f:"2026-11-21",t:"2027-01-06",h:"11:00–21:00",d:"Na Starém Městě mezi Barbakanem a Rynkiem, světelná výzdoba Královské cesty."},
+  {n:"Jarmark Bożonarodzeniowy",c:"Gdaňsk",cc:"PL",lat:54.3490,lng:18.6530,f:"2026-11-20",t:"2026-12-23",h:"11:00–21:00",d:"Na Targu Węglowym, s kolotočem a výhledem na hradby."},
+];
+const COUNTRIES = {CZ:{flag:"🇨🇿",name:"Česko"},DE:{flag:"🇩🇪",name:"Německo"},AT:{flag:"🇦🇹",name:"Rakousko"},SK:{flag:"🇸🇰",name:"Slovensko"},PL:{flag:"🇵🇱",name:"Polsko"}};
+
+/* ---------- State ---------- */
+const state = {
+  me:null,                // L.LatLng
+  area:null,              // L.Polygon
+  areaPts:null,           // [L.LatLng]
+  countries:new Set(Object.keys(COUNTRIES)),
+  onlyOpen:false,
+};
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); })();
+const parseD = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const DAY = 864e5;
+
+function status(m){
+  const f = parseD(m.f), t = parseD(m.t);
+  if (today < f){ const days = Math.round((f - today)/DAY); return {k:"soon", label: days === 1 ? "zítra" : `za ${days} ${days<5?"dny":"dní"}`}; }
+  if (today > t) return {k:"closed", label:"skončil"};
+  return {k:"open", label:"probíhá"};
+}
+function fmtRange(m){
+  const f = parseD(m.f), t = parseD(m.t);
+  const p = d => `${d.getDate()}. ${d.getMonth()+1}.`;
+  return f.getFullYear() === t.getFullYear() ? `${p(f)} – ${p(t)} ${t.getFullYear()}` : `${p(f)} ${f.getFullYear()} – ${p(t)} ${t.getFullYear()}`;
+}
+function distKm(a, b){
+  const R = 6371, r = Math.PI/180;
+  const dLat = (b.lat-a.lat)*r, dLng = (b.lng-a.lng)*r;
+  const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+const fmtKm = km => km < 10 ? `${km.toFixed(1).replace(".",",")} km` : `${Math.round(km)} km`;
+function inPoly(lat, lng, poly){
+  let inside = false;
+  for (let i = 0, j = poly.length-1; i < poly.length; j = i++){
+    const yi = poly[i].lat, xi = poly[i].lng, yj = poly[j].lat, xj = poly[j].lng;
+    if (((yi > lat) !== (yj > lat)) && (lng < (xj-xi)*(lat-yi)/(yj-yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+let toastT;
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), 2800); }
+
+/* ---------- Map ---------- */
+const map = L.map("map", {zoomControl:false, minZoom:5, maxBounds:[[42,2],[58,28]], maxBoundsViscosity:.8});
+L.control.zoom({position:"bottomright"}).addTo(map);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+  maxZoom:19, subdomains:"abcd",
+  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+}).addTo(map);
+map.fitBounds([[48.55,12.1],[51.06,18.86]]); // Česko
+
+const markerLayer = L.layerGroup().addTo(map);
+MARKETS.forEach((m, i) => {
+  m.id = i;
+  m.marker = L.marker([m.lat, m.lng], {icon: pinIcon(m, false), title:`${m.c} – ${m.n}`});
+  m.marker.bindPopup(() => popupHtml(m), {maxWidth:300, autoPanPadding:[20,80]});
+});
+function pinIcon(m, dim){
+  return L.divIcon({className:"", iconSize:[34,34], iconAnchor:[17,34], popupAnchor:[0,-32],
+    html:`<div class="pin ${status(m).k}${dim?" dim":""}"><span>🎄</span></div>`});
+}
+function popupHtml(m){
+  const s = status(m), co = COUNTRIES[m.cc];
+  const dist = state.me ? `<dt>Vzdálenost</dt><dd>${fmtKm(distKm(state.me, m))} vzdušnou čarou</dd>` : "";
+  const q = encodeURIComponent(`${m.n} ${m.c} vánoční trh 2026`);
+  return `<div class="pop">
+    <h3>${esc(m.n)}</h3>
+    <div class="sub">${co.flag} ${esc(m.c)}, ${co.name} · <span class="badge b-${s.k}">${s.label}</span></div>
+    <dl><dt>Termín</dt><dd>${fmtRange(m)}</dd><dt>Otevřeno</dt><dd>${esc(m.h)}</dd>${dist}</dl>
+    <p>${esc(m.d)}</p>
+    <div class="acts">
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank" rel="noopener">🧭 Navigovat</a>
+      <a class="sec" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">🔎 Více info</a>
+    </div>
+  </div>`;
+}
+
+/* ---------- Location ---------- */
+let meMarker = null, firstFix = true;
+function locate(fly){
+  if (!navigator.geolocation){ toast("Prohlížeč nepodporuje určení polohy"); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    state.me = L.latLng(pos.coords.latitude, pos.coords.longitude);
+    if (!meMarker){
+      meMarker = L.marker(state.me, {icon:L.divIcon({className:"", html:'<div class="me"></div>', iconSize:[18,18], iconAnchor:[9,9]}), zIndexOffset:1000, interactive:false}).addTo(map);
+    } else meMarker.setLatLng(state.me);
+    if (fly || firstFix) map.flyTo(state.me, state.area ? map.getZoom() : 9, {duration:.8});
+    firstFix = false;
+    refresh();
+  }, err => {
+    if (fly) toast(err.code === 1 ? "Přístup k poloze je zakázaný. Povolte ho v nastavení prohlížeče." : "Polohu se nepodařilo zjistit");
+  }, {enableHighAccuracy:false, timeout:10000, maximumAge:300000});
+}
+$("#btnLocate").onclick = () => locate(true);
+
+/* ---------- Freehand drawing ---------- */
+const container = map.getContainer();
+const INTERACTIONS = ["dragging","touchZoom","doubleClickZoom","boxZoom","scrollWheelZoom","keyboard"];
+let drawMode = false, drawPointer = null, pts = [], tempLine = null, lastPx = null;
+
+function setDrawMode(on){
+  drawMode = on;
+  document.body.classList.toggle("drawing", on);
+  INTERACTIONS.forEach(k => map[k] && (on ? map[k].disable() : map[k].enable()));
+  $("#btnDraw").classList.toggle("active", on);
+  $("#btnDraw").setAttribute("aria-pressed", on);
+  $("#btnDraw span").textContent = on ? "Kreslete…" : "Oblast";
+  $("#hint").hidden = !on;
+  if (on){ map.closePopup(); if (innerWidth < 900) setSheet("min"); }
+}
+function eventLatLng(e){
+  const r = container.getBoundingClientRect();
+  const p = L.point(e.clientX - r.left, e.clientY - r.top);
+  return {ll: map.containerPointToLatLng(p), px: p};
+}
+container.addEventListener("pointerdown", e => {
+  if (!drawMode || drawPointer !== null) return;
+  e.preventDefault(); e.stopPropagation();
+  drawPointer = e.pointerId;
+  try { container.setPointerCapture(e.pointerId); } catch(_) {}
+  const {ll, px} = eventLatLng(e);
+  pts = [ll]; lastPx = px;
+  tempLine = L.polyline(pts, {color:"#c8962e", weight:4, dashArray:"6 6", interactive:false}).addTo(map);
+}, true);
+container.addEventListener("pointermove", e => {
+  if (!drawMode || e.pointerId !== drawPointer) return;
+  e.preventDefault(); e.stopPropagation();
+  const {ll, px} = eventLatLng(e);
+  if (px.distanceTo(lastPx) < 4) return;
+  pts.push(ll); lastPx = px; tempLine.setLatLngs(pts);
+}, true);
+function finishDraw(e){
+  if (e.pointerId !== drawPointer) return;
+  e.stopPropagation();
+  drawPointer = null;
+  if (tempLine){ map.removeLayer(tempLine); tempLine = null; }
+  const b = L.latLngBounds(pts);
+  const sizePx = map.latLngToContainerPoint(b.getNorthEast()).distanceTo(map.latLngToContainerPoint(b.getSouthWest()));
+  if (pts.length < 3 || sizePx < 30){ toast("Oblast je příliš malá. Zkuste ji obkreslit větší."); return; }
+  setArea(pts);
+  setDrawMode(false);
+}
+container.addEventListener("pointerup", finishDraw, true);
+container.addEventListener("pointercancel", finishDraw, true);
+// swallow clicks generated by drawing so markers/map don't react
+container.addEventListener("click", e => { if (document.body.classList.contains("drawing")) e.stopPropagation(); }, true);
+
+function setArea(points){
+  clearArea(true);
+  state.areaPts = points;
+  state.area = L.polygon(points, {color:"#7a1f2b", weight:3, fillColor:"#c8962e", fillOpacity:.15, interactive:false}).addTo(map);
+  $("#btnClear").hidden = false;
+  const padBottom = innerWidth < 900 ? innerHeight*0.46 : 40;
+  const padLeft = innerWidth >= 900 ? 400 : 20;
+  map.fitBounds(state.area.getBounds(), {paddingTopLeft:[padLeft,80], paddingBottomRight:[20,padBottom]});
+  refresh();
+  setSheet("mid");
+  const n = filtered().filter(m => m.inArea).length;
+  toast(n ? `V oblasti: ${n} ${n===1?"trh":n<5?"trhy":"trhů"}` : "V oblasti nejsou žádné trhy");
+}
+function clearArea(silent){
+  if (state.area) map.removeLayer(state.area);
+  state.area = null; state.areaPts = null;
+  $("#btnClear").hidden = true;
+  if (!silent) refresh();
+}
+$("#btnDraw").onclick = () => setDrawMode(!drawMode);
+$("#btnClear").onclick = () => clearArea(false);
+
+/* ---------- Filters ---------- */
+function renderFilters(){
+  const f = $("#filters");
+  f.innerHTML = "";
+  const open = document.createElement("button");
+  open.className = "chip"; open.textContent = "✨ Otevřeno dnes";
+  open.setAttribute("aria-pressed", state.onlyOpen);
+  open.onclick = () => { state.onlyOpen = !state.onlyOpen; renderFilters(); refresh(); };
+  f.appendChild(open);
+  Object.entries(COUNTRIES).forEach(([cc, co]) => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = `${co.flag} ${co.name}`;
+    b.setAttribute("aria-pressed", state.countries.has(cc));
+    b.onclick = () => { state.countries.has(cc) ? state.countries.delete(cc) : state.countries.add(cc); renderFilters(); refresh(); };
+    f.appendChild(b);
+  });
+}
+function filtered(){
+  return MARKETS.filter(m => state.countries.has(m.cc) && (!state.onlyOpen || status(m).k === "open"))
+    .map(m => { m.inArea = state.areaPts ? inPoly(m.lat, m.lng, state.areaPts) : true; return m; });
+}
+
+/* ---------- List & markers ---------- */
+function refresh(){
+  const list = filtered();
+  markerLayer.clearLayers();
+  list.forEach(m => { m.marker.setIcon(pinIcon(m, !m.inArea)); markerLayer.addLayer(m.marker); });
+
+  let shown, title, sub;
+  if (state.areaPts){
+    shown = list.filter(m => m.inArea);
+    title = "Trhy v oblasti";
+  } else {
+    const b = map.getBounds();
+    shown = list.filter(m => b.contains([m.lat, m.lng]));
+    title = "Trhy na mapě";
+  }
+  if (state.me){
+    shown.forEach(m => m.km = distKm(state.me, m));
+    shown.sort((a, b) => a.km - b.km);
+    sub = `${shown.length} · podle vzdálenosti`;
+  } else {
+    shown.sort((a, b) => a.c.localeCompare(b.c, "cs") || a.n.localeCompare(b.n, "cs"));
+    sub = `${shown.length} · podle abecedy`;
+  }
+  $("#sheetTitle").textContent = title;
+  $("#sheetSub").textContent = sub;
+
+  const ul = $("#list");
+  if (!shown.length){
+    ul.innerHTML = `<li class="empty">${state.areaPts ? "V nakreslené oblasti nejsou žádné trhy.<br>Zkuste ji zvětšit nebo upravit filtry." : "Tady na mapě nejsou žádné trhy. Posuňte mapu, nebo nakreslete oblast ✏️"}</li>`;
+  } else {
+    ul.innerHTML = shown.map(m => {
+      const s = status(m), co = COUNTRIES[m.cc];
+      return `<li><button class="item" data-id="${m.id}">
+        <span class="ico">${co.flag}</span>
+        <span class="body"><span class="name">${esc(m.c)}: ${esc(m.n)}</span><br>
+          <span class="meta"><span class="badge b-${s.k}">${s.label}</span> ${fmtRange(m)} · ${esc(m.h)}</span></span>
+        ${state.me ? `<span class="dist">${fmtKm(m.km)}</span>` : ""}
+      </button></li>`;
+    }).join("");
+  }
+  ul.insertAdjacentHTML("beforeend", `<li class="note" style="border:0">Termíny pro sezónu 2026/27 jsou orientační. Před cestou je ověřte u pořadatele (tlačítko „Více info“).</li>`);
+}
+$("#list").addEventListener("click", e => {
+  const btn = e.target.closest(".item"); if (!btn) return;
+  const m = MARKETS[+btn.dataset.id];
+  if (innerWidth < 900) setSheet("min");
+  const target = map.getZoom() < 12 ? 13 : map.getZoom();
+  // offset so the marker sits above the bottom sheet on phones
+  const off = innerWidth < 900 ? innerHeight*0.12 : 0;
+  const pt = map.project([m.lat, m.lng], target).add([innerWidth >= 900 ? -190 : 0, off]);
+  map.flyTo(map.unproject(pt, target), target, {duration:.7});
+  map.once("moveend", () => m.marker.openPopup());
+});
+map.on("moveend", () => { if (!state.areaPts) refresh(); });
+
+/* ---------- Bottom sheet ---------- */
+function setSheet(s){ $("#sheet").dataset.state = s; }
+$("#sheetHandle").onclick = () => {
+  if (innerWidth >= 900) return;
+  const order = {min:"mid", mid:"max", max:"min"};
+  setSheet(order[$("#sheet").dataset.state]);
+};
+// simple swipe on the handle
+(() => {
+  let y0 = null;
+  const h = $("#sheetHandle");
+  h.addEventListener("touchstart", e => { y0 = e.touches[0].clientY; }, {passive:true});
+  h.addEventListener("touchend", e => {
+    if (y0 === null) return;
+    const dy = e.changedTouches[0].clientY - y0; y0 = null;
+    if (Math.abs(dy) < 30) return;
+    e.preventDefault();
+    const st = $("#sheet").dataset.state;
+    setSheet(dy < 0 ? (st === "min" ? "mid" : "max") : (st === "max" ? "mid" : "min"));
+  });
+})();
+
+/* ---------- Init ---------- */
+renderFilters();
+refresh();
+locate(false);
+</script>
+</body>
+</html>
